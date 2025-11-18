@@ -1,0 +1,32 @@
+# Essential Framework
+fastapi
+uvicorn
+python-multipart
+
+# Data Models
+pydantic
+
+# News Scraping
+feedparser
+newspaper3k
+beautifulsoup4
+lxml
+
+# LangChain (minimal)
+langchain
+langchain-core
+langchain-community
+langchain-huggingface
+langchain-text-splitters
+
+# Vector Store and Embeddings
+chromadb
+sentence-transformers
+
+# Hugging Face
+huggingface-hub
+
+# Utilities
+requests
+
+lxml_html_clean
