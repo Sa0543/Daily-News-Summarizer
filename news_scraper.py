@@ -6,7 +6,6 @@ import time
 
 class NewsScraper:
     def __init__(self):
-        # Keep the category feeds similar to your streamlit version
         self.category_feeds = {
             'General': [
                 'http://rss.cnn.com/rss/cnn_topstories.rss',
@@ -54,57 +53,63 @@ class NewsScraper:
                 'http://feeds.reuters.com/reuters/health',
             ]
         }
-
-    def fetch_rss_news(self, max_articles=30, categories=None):
+    
+    def fetch_rss_news(self, max_articles=10, categories=None):
         articles = []
+
         if categories is None:
             categories = list(self.category_feeds.keys())
 
-        articles_per_category = max(1, max_articles // len(categories))
-
         for category in categories:
-            if category not in self.category_feeds:
+            if len(articles) >= max_articles:
+                break
+
+        feeds = self.category_feeds[category]
+
+        for feed_url in feeds:
+            if len(articles) >= max_articles:
+                break
+
+            try:
+                feed = feedparser.parse(feed_url)
+                source_name = feed.feed.get('title', category)
+
+                # scan up to 50 entries per feed
+                for entry in feed.entries[:50]:
+                    if len(articles) >= max_articles:
+                        break
+
+                    article_data = {
+                        "title": entry.get("title", ""),
+                        "url": entry.get("link", ""),
+                        "source": source_name,
+                        "category": category,
+                        "published": entry.get("published", ""),
+                        "description": entry.get("summary", "")
+                    }
+
+                    # full content using newspaper3k
+                    try:
+                        article = Article(article_data["url"])
+                        article.download()
+                        article.parse()
+                        content = article.text
+                        image = article.top_image
+                    except:
+                        content = article_data["description"]
+                        image = None
+
+                    if content:
+                        article_data["content"] = content
+                        article_data["image"] = image
+                        articles.append(article_data)
+
+            except Exception as e:
+                print(f"Feed read error {feed_url}: {e}")
                 continue
-            feeds = self.category_feeds[category]
-            category_articles = 0
-            for feed_url in feeds:
-                if category_articles >= articles_per_category:
-                    break
-                try:
-                    feed = feedparser.parse(feed_url)
-                    source_name = feed.feed.get('title', category)
-                    for entry in feed.entries[:5]:
-                        if category_articles >= articles_per_category:
-                            break
-                        article_data = {
-                            'title': entry.get('title', 'No title'),
-                            'url': entry.get('link', ''),
-                            'source': source_name,
-                            'category': category,
-                            'published': entry.get('published', str(datetime.now())),
-                            'description': entry.get('summary', '')
-                        }
-                        # fetch full content with newspaper3k
-                        try:
-                            article = Article(article_data['url'])
-                            article.download()
-                            article.parse()
-                            article_data['content'] = article.text
-                            article_data['image'] = article.top_image
-                        except Exception:
-                            article_data['content'] = article_data['description']
-                            article_data['image'] = None
-
-                        if article_data['content']:
-                            articles.append(article_data)
-                            category_articles += 1
-
-                        time.sleep(0.2)
-                except Exception as e:
-                    print(f"Feed read error {feed_url}: {e}")
-                    continue
 
         return articles[:max_articles]
 
+    
     def get_available_categories(self):
         return list(self.category_feeds.keys())

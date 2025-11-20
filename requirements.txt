@@ -30,3 +30,6 @@ huggingface-hub
 requests
 
 lxml_html_clean
+dotenv
+
+langchain-google-genai

@@ -3,122 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI News Summarizer</title>
-    <link rel="stylesheet" href="static/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>News Summarizer</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
     <div class="container">
-        <!-- Header -->
-        <header class="header">
-            <div class="logo">
-                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="32" height="32" rx="8" fill="url(#gradient)"/>
-                    <path d="M16 8L22 16L16 24L10 16L16 8Z" fill="white"/>
-                    <defs>
-                        <linearGradient id="gradient" x1="0" y1="0" x2="32" y2="32">
-                            <stop offset="0%" stop-color="#667eea"/>
-                            <stop offset="100%" stop-color="#764ba2"/>
-                        </linearGradient>
-                    </defs>
-                </svg>
-                <h1>AI News Hub</h1>
-            </div>
-            <p class="tagline">RAG-Powered News Summarizer</p>
+        <header>
+            <h1>📰 AI News Summarizer</h1>
+            <p>Get summarized news articles from your favorite categories</p>
         </header>
 
-        <!-- Tab Navigation -->
-        <nav class="tabs">
-            <button class="tab-btn active" data-tab="fetch">Fetch News</button>
-            <button class="tab-btn" data-tab="search">Search Articles</button>
-            <button class="tab-btn" data-tab="summarize">Summarize Text</button>
-        </nav>
-
-        <!-- Tab Content -->
-        <main class="content">
-            <!-- Fetch News Tab -->
-            <div class="tab-content active" id="fetch-tab">
-                <div class="control-panel">
-                    <h2>Fetch Latest News</h2>
-                    <div class="form-group">
-                        <label>Select Categories</label>
-                        <div class="category-grid" id="category-grid">
-                            <!-- Categories will be loaded dynamically -->
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="max-articles">Maximum Articles: <span id="article-count">20</span></label>
-                        <input type="range" id="max-articles" min="5" max="50" value="20" step="5">
-                    </div>
-                    <button class="btn btn-primary" id="fetch-btn">
-                        <span class="btn-text">Fetch News</span>
-                        <span class="loader" style="display: none;"></span>
-                    </button>
-                </div>
-
-                <!-- News Grid -->
-                <div class="news-grid" id="news-grid">
-                    <!-- Articles will appear here -->
+        <div class="controls">
+            <div class="categories-section">
+                <h3>Select Categories:</h3>
+                <div id="categoriesContainer" class="categories-grid">
+                    <!-- Categories will be loaded dynamically -->
                 </div>
             </div>
 
-            <!-- Search Tab -->
-            <div class="tab-content" id="search-tab">
-                <div class="control-panel">
-                    <h2>Search News Articles</h2>
-                    <div class="form-group">
-                        <label for="search-query">Search Query</label>
-                        <input type="text" id="search-query" placeholder="Enter keywords or topics..." class="input-field">
-                    </div>
-                    <div class="form-group">
-                        <label for="search-results-count">Number of Results: <span id="search-count">5</span></label>
-                        <input type="range" id="search-results-count" min="1" max="10" value="5">
-                    </div>
-                    <button class="btn btn-primary" id="search-btn">
-                        <span class="btn-text">Search</span>
-                        <span class="loader" style="display: none;"></span>
-                    </button>
-                </div>
-                <div class="search-results" id="search-results">
-                    <!-- Search results will appear here -->
-                </div>
+            <div class="input-section">
+                <label for="articleCount">Number of Articles:</label>
+                <input type="number" id="articleCount" min="1" max="50" value="10">
             </div>
 
-            <!-- Summarize Tab -->
-            <div class="tab-content" id="summarize-tab">
-                <div class="control-panel">
-                    <h2>Summarize Article</h2>
-                    <div class="form-group">
-                        <label for="text-input">Paste Article Text</label>
-                        <textarea id="text-input" rows="8" placeholder="Paste the article text you want to summarize..." class="input-field"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>Summary Length</label>
-                        <div class="radio-group">
-                            <label class="radio-label">
-                                <input type="radio" name="summary-length" value="Brief"> Brief
-                            </label>
-                            <label class="radio-label">
-                                <input type="radio" name="summary-length" value="Medium" checked> Medium
-                            </label>
-                            <label class="radio-label">
-                                <input type="radio" name="summary-length" value="Detailed"> Detailed
-                            </label>
-                        </div>
-                    </div>
-                    <button class="btn btn-primary" id="summarize-btn">
-                        <span class="btn-text">Generate Summary</span>
-                        <span class="loader" style="display: none;"></span>
-                    </button>
-                </div>
-                <div class="summary-result" id="summary-result" style="display: none;">
-                    <h3>Summary</h3>
-                    <div class="summary-text" id="summary-text"></div>
-                </div>
-            </div>
-        </main>
+            <button id="fetchBtn" class="fetch-btn">
+                <span class="btn-text">Fetch & Summarize</span>
+                <span class="spinner" style="display: none;">⏳</span>
+            </button>
+        </div>
+
+        <div id="resultsSection" class="results-section" style="display: none;">
+            <h2>Summarized Articles (<span id="articleCountDisplay">0</span>)</h2>
+            <div id="articlesContainer"></div>
+        </div>
     </div>
 
-    <script src="static/app.js"></script>
+    <script src="/static/script.js"></script>
 </body>
 </html>
