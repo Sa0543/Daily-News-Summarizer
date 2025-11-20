@@ -1,22 +1,23 @@
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain_core.documents import Document
 from langchain_huggingface import HuggingFaceEndpoint
 from langchain_core.output_parsers import StrOutputParser
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class RAGProcessor:
     def __init__(self, persist_directory="./chroma_db"):
 
-        # Embeddings
+        # Embeddings 
         self.embeddings = HuggingFaceEmbeddings(
             model_name="sentence-transformers/all-MiniLM-L6-v2",
             model_kwargs={'device': 'cpu'},
             encode_kwargs={'normalize_embeddings': True}
         )
-
 
         self.persist_directory = persist_directory
         self.text_splitter = RecursiveCharacterTextSplitter(
@@ -25,11 +26,16 @@ class RAGProcessor:
             length_function=len
         )
 
-        self.summarizer = (
-            HuggingFaceEndpoint(
-                repo_id="mistralai/Mistral-7B-Instruct",
-                task="text-generation",
-        )
+        # Configure summarizer with sane defaults
+        self.summarizer = HuggingFaceEndpoint(
+            repo_id="mistralai/Mistral-7B-Instruct-v0.1",
+            task="text-generation",
+            max_new_tokens=380,   
+            temperature=0.3,
+            top_p=0.9,
+            repetition_penalty=1.2,
+            return_full_text=False,
+            huggingfacehub_api_token=os.getenv("HUGGINGFACEHUB_API_TOKEN")
     )
 
     # Vector index builder
@@ -75,30 +81,27 @@ class RAGProcessor:
     
     def summarize_article(self, text, max_length=200, min_length=120):
         try:
-            # Trim very long text
-            max_input = 3000
+            # hard cap on input length (in words)
+            max_input_words = 1500
             words = text.split()
-            if len(words) > max_input:
-                text = " ".join(words[:max_input])
+            if len(words) > max_input_words:
+                text = " ".join(words[:max_input_words])
 
-            # Summarizer ALWAYS expects a STRING — NOT dict
             prompt = (
-                "Summarize the following news article in 5–6 detailed sentences. "
-                "Include main issue, key facts, people involved, and impact. "
-                "Avoid generic or shallow summaries.\n\n"
+                "You are a news assistant that writes clear, detailed summaries.\n\n"
+                "Task: Read the full article below and write a concise news summary "
+                "of 5 to 6 complete sentences (around 150–220 words).\n"
+                "- Start with one sentence that states the main event or issue.\n"
+                "- Then explain the most important facts, people/organizations involved, "
+                "and any numbers, locations, or dates that matter.\n"
+                "- End with 1 sentence on the impact, consequence, or what happens next.\n"
+                "- Do NOT write bullet points. Do NOT add extra commentary.\n\n"
                 f"ARTICLE:\n{text}\n\n"
-                "SUMMARY:"
+                "Now write the summary:"
             )
 
-            summary = self.summarizer.invoke(
-                prompt,
-                 params={
-                        "max_new_tokens": 500,
-                        "temperature": 0.3,
-                        "top_p": 0.9,
-                        "repetition_penalty": 1.2
-            }
-            )
+            summary = self.summarizer.invoke(prompt)
+
             return summary.strip()
 
         except Exception as e:
@@ -109,6 +112,7 @@ class RAGProcessor:
         summarized = []
 
         for art in articles:
+            # prefer full content, fall back to description
             text = art.get("content") or art.get("description")
             if not text:
                 continue
@@ -126,3 +130,5 @@ class RAGProcessor:
             })
 
         return summarized
+
+    
